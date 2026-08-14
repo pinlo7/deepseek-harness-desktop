@@ -6,6 +6,11 @@ directories:
   output: dist
   buildResources: build
 
+publish:
+  provider: github
+  owner: pinlo7
+  repo: deepseek-harness-desktop
+
 files:
   - main.js
   - preload.js

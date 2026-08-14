@@ -3,7 +3,7 @@
 // M1: single-instance lock, tray residency, close-to-tray (host stays alive).
 // M3: host runs as `ELECTRON_RUN_AS_NODE` against the unpacked dsh dependency,
 //     so it needs no system Node and --expose-internals reaches dsh's loader.
-const { app, BrowserWindow, Tray, Menu, nativeImage } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, Notification } = require('electron');
 const { spawn } = require('node:child_process');
 const path = require('node:path');
 const fs = require('node:fs');
@@ -93,6 +93,26 @@ function startHost() {
     console.log('[desktop] dsh host exited', { code, signal });
     hostProcess = null;
     if (!quitting) quit();
+  });
+}
+
+function setupAutoUpdater() {
+  // Auto-update only applies to the packaged app; the dev run has no publish metadata.
+  if (!app.isPackaged) {
+    console.log('[desktop] auto-update disabled (dev mode)');
+    return;
+  }
+  const { autoUpdater } = require('electron-updater');
+  autoUpdater.logger = console;
+  autoUpdater.on('update-downloaded', (info) => {
+    const n = new Notification({
+      title: 'DeepSeek Harness update ready',
+      body: `Version ${info.version} downloaded — restart to apply.`,
+    });
+    n.show();
+  });
+  autoUpdater.checkForUpdatesAndNotify().catch((err) => {
+    console.error('[desktop] update check failed:', err.message);
   });
 }
 
@@ -198,6 +218,7 @@ if (!app.requestSingleInstanceLock()) {
     ensureDesktopProfile();
     startHost();
     createTray();
+    setupAutoUpdater();
   });
 }
 
