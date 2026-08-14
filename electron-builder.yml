@@ -1,0 +1,52 @@
+appId: ai.deepseek.harness.desktop
+productName: DeepSeek Harness
+copyright: Copyright © 2026 DeepSeek
+
+directories:
+  output: dist
+  buildResources: build
+
+files:
+  - main.js
+  - preload.js
+  - assets/**
+  - profiles/**
+  - package.json
+  - node_modules/**/*
+  - "!node_modules/electron/**"
+  - "!node_modules/electron-builder/**"
+  - "!node_modules/@electron/**"
+  - "!**/*.map"
+  - "!**/*.md"
+
+asar: true
+asarUnpack:
+  # The dsh host dependency tree runs under ELECTRON_RUN_AS_NODE, which needs
+  # real files (not the virtual asar), so unpack the whole node_modules.
+  - node_modules/**
+
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Development
+  icon: assets/icon.png
+  maintainer: DeepSeek
+  synopsis: DeepSeek Harness desktop
+
+mac:
+  target:
+    - dmg
+    - zip
+  category: public.app-category.developer-tools
+  icon: assets/icon.png
+
+win:
+  target:
+    - nsis
+  icon: assets/icon.png
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: false

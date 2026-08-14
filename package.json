@@ -1,0 +1,25 @@
+{
+  "name": "dsh-desktop",
+  "version": "0.1.0",
+  "description": "DeepSeek Harness desktop shell (Electron wrapper)",
+  "author": "DeepSeek",
+  "homepage": "https://github.com/deepseek-ai/deepseek-harness",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "start:debug": "ELECTRON_ENABLE_LOGGING=1 electron .",
+    "dist": "electron-builder",
+    "dist:linux": "electron-builder --linux",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac"
+  },
+  "devDependencies": {
+    "electron": "^43.4.0",
+    "electron-builder": "^26.15.3"
+  },
+  "dependencies": {
+    "@deepseek-ai/cordis-plugin-group": "^1.0.1",
+    "@deepseek-ai/dsh": "^0.1.0-rc.6"
+  }
+}
