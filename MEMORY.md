@@ -53,6 +53,8 @@
    - **遗留风险**：`dsh-fs-local` 的 `writeFileAtomic` 在 Windows 也走 koffi（advapi32 DACL 复制）——若用户机器 koffi 全面崩溃，跑对话写文件仍会报错；用户实测若遇到再按 #30 改 fs-local 默认实现。
    - **npm install 注意**：npm 11 的 allow-scripts 会拦 koffi/electron 等的 install 脚本（`npm approve-scripts` 可解）；本机 npm install 需 `--cache <工作区路径>`（沙箱挡 %LOCALAPPDATA% cache）+ 全权限（spawn EPERM）。
    - **electron-builder 本地构建**：无 VS 工具链时 node-pty rebuild 失败 → 加 `--config.npmRebuild=false`（node-pty prebuilds 随包、koffi prebuilt 随 optionalDeps，dir 包已验证两者都在 app.asar.unpacked）。
+7. **macOS CI 构建失败 `⨯ <repo> not a file`（macOS 26 runner 起）**：electron-builder 26.15.3 的 `macPackager.codeSigningInfo` 里 `getCscLink()` 只过滤 `null` 不过滤空串；CI 里未配置的 secrets 展开成 `CSC_LINK=""`（非 null）→ `createKeychain("")` → `importCertificate("")` → 解析成 repo 根目录 → `not a file`。v0.1.4 时代 macos-latest 还是旧镜像未触发，2026-08-14 起 runner 变 `macos-26-arm64` 后必现（重跑复现）。**修复（`ebbbbf7`）**：Build step 加 `shell: bash`，构建前 `if [ -z "$VAR" ]; then unset VAR; fi` 清掉空 secrets（CSC_LINK/CSC_KEY_PASSWORD/APPLE_*），unsigned 构建走 ad-hoc 签名。教训：**GitHub Actions 未配置的 secrets 是空字符串不是 undefined，会以"用户显式指定"形式传入 electron-builder。**
+   - 验证方式：`gh workflow run build-desktop`（dispatch，publish never）→ 产物在 artifacts → `gh run download` 手动传 GitHub Releases。
 
 ## 六、当前阻塞（正式上线被卡住）
 
