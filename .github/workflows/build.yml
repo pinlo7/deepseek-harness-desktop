@@ -6,6 +6,9 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     strategy:
@@ -30,12 +33,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # On a tag push, publish the installers to GitHub Releases (feeds
+      # electron-updater via latest*.yml). On manual dispatch, build only.
       - name: Build
-        run: npx electron-builder --${{ matrix.target }}
+        run: npx electron-builder --${{ matrix.target }} --publish ${{ startsWith(github.ref, 'refs/tags/') && 'always' || 'never' }}
         env:
-          # Unsigned by default. For a signed release, configure the platform
-          # certificates (CSC_LINK/CSC_KEY_PASSWORD on mac/win, Apple ID for
-          # notarization) and remove this flag.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Unsigned by default. For a signed release, add repository secrets
+          # (CSC_LINK / CSC_KEY_PASSWORD, and APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD /
+          # APPLE_TEAM_ID for macOS notarization) and remove this flag.
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
 
       - name: Upload artifacts
@@ -49,4 +55,6 @@ jobs:
             dist/*.exe
             dist/*.dmg
             dist/*.zip
+            dist/*.blockmap
+            dist/latest*.yml
           if-no-files-found: ignore
