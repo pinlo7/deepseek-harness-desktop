@@ -1,6 +1,7 @@
 # 会话记忆：DeepSeek Harness 桌面版 上线准备进度
 
 > 保存时间：2026-08-14。此文件随仓库走，跨会话/跨平台可访问。事实以本会话工具结果为准。
+> 更新：2026-08-14（Windows 实测报 directory picker 错误 → 已定位并修复，见「六」）。
 
 ## 一、项目全景
 
@@ -48,12 +49,17 @@
 3. **electron-builder 漏打包 peer 依赖**：18 个 `@deepseek-ai/dsh-*` 包（`cordis-plugin-group`、`dsh-timeout`、`dsh-scope`、`dsh-fs`、`dsh-spill` 等）是 peerDependencies，npm dev 自动装但 electron-builder 不打包，AppImage FUSE 隔离环境暴露缺失。已全部显式 pin 进 `package.json` dependencies。
 4. **macOS 只出 arm64**：`macos-latest` 是 Apple Silicon，需显式 `arch: [x64, arm64]`。
 5. **sharp 的 `.so`（libvips）**：需 asarUnpack，最终整个 `node_modules` 解包。
+6. **Windows 打开工作区报 `directory picker failed: win32 folder dialog worker exited before reporting a result`**：dsh 的 native 目录选择器（`@deepseek-ai/dsh-host-directory-picker-native`）spawn worker 用 **koffi**（N-API FFI，napi≥8，prebuilt 在 `@koromix/koffi-*` optionalDeps 里）驱动 Win32 文件夹对话框；部分 Windows 机器上 worker 未报告即退出（上游 discussions #197/#30，koffi 原生崩溃）。本机（Win11 26200 x64）dev/打包两条路径均无法复现（worker 正常弹框），判定为环境特异。**修复：desktop profile 在 Windows 上固定纯 JS 的 browse 后端**（`directory-picker` 行 disabled + insert `dsh-host-directory-picker-browse` + `dsh-client-ui-directory-picker-browse`），mac/Linux 保持 native。验证：`ELECTRON_RUN_AS_NODE=1 "DeepSeek Harness.exe" --expose-internals <dsh>/lib/bin.js --profile desktop --dump-config` 可见 auto 禁用、browse 启用。
+   - **遗留风险**：`dsh-fs-local` 的 `writeFileAtomic` 在 Windows 也走 koffi（advapi32 DACL 复制）——若用户机器 koffi 全面崩溃，跑对话写文件仍会报错；用户实测若遇到再按 #30 改 fs-local 默认实现。
+   - **npm install 注意**：npm 11 的 allow-scripts 会拦 koffi/electron 等的 install 脚本（`npm approve-scripts` 可解）；本机 npm install 需 `--cache <工作区路径>`（沙箱挡 %LOCALAPPDATA% cache）+ 全权限（spawn EPERM）。
+   - **electron-builder 本地构建**：无 VS 工具链时 node-pty rebuild 失败 → 加 `--config.npmRebuild=false`（node-pty prebuilds 随包、koffi prebuilt 随 optionalDeps，dir 包已验证两者都在 app.asar.unpacked）。
 
 ## 六、当前阻塞（正式上线被卡住）
 
 1. **代码签名/公证**（等用户）：需 Apple Developer + Windows 代码签名证书。CI 已配好 secrets 传递（`CSC_LINK`/`CSC_KEY_PASSWORD`/`APPLE_ID`/`APPLE_APP_SPECIFIC_PASSWORD`/`APPLE_TEAM_ID`，或 `APPLE_API_KEY` 三件套）。填好 secrets 打新 tag 即自动签名。
 2. **dsh 钉 GA**（等上游）：`@deepseek-ai/dsh` 仍是 `0.1.0-rc.6`，无 GA。
 3. **真实对话实测**（进行中）：Linux 已定位到"装了 0.1.0 旧版"，需重装 0.1.4；Windows 待测。
+4. **Windows picker 修复待发布**：仓库已提交（`74f4923`，`profiles/desktop/cordis.patch.yml` 固定 browse），用户本机 profile 已即时 patch 并重启验证通过（dump-config 确认 auto 禁用/browse 启用、UI 200）。**待用户实测**：打开工作区（应为网页选择器）+ 跑一轮真实对话（验证 fs koffi 是否也崩）。确认 OK 后 bump 版本发 0.1.5。
 
 ## 七、下一步（按用户进展触发）
 
