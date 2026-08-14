@@ -1,4 +1,30 @@
-# Your patch layer for this dsh profile, applied after every bundle layer:
+# Desktop profile patch layer, applied after every bundle layer:
 # a top-level YAML array of loader patch entries (id-targeted config
 # overrides, disables, and insert lists; `!!js` expressions allowed).
-[]
+
+# ── Directory picker: Windows uses the pure-JS browse backend ──────────────
+#
+# The native backend (@deepseek-ai/dsh-host-directory-picker-native) drives a
+# real Win32 folder dialog through koffi in a spawned worker process. On some
+# Windows 10 machines koffi crashes natively (upstream discussion #197/#30),
+# which makes the worker exit before reporting a result and breaks "open
+# workspace" with:
+#   directory picker failed: win32 folder dialog worker exited before
+#   reporting a result
+#
+# The browse backend is a plain web file-picker (no native code), works on
+# every OS, and is what dsh itself falls back to on Linux without a chooser.
+# macOS/Linux keep the native chooser; Windows is pinned to browse until the
+# upstream koffi issue is fixed. Remove this block once dsh ships a fixed
+# native backend.
+- id: directory-picker
+  disabled: !!js process.platform === 'win32'
+
+- insert:
+    - id: directory-picker-browse
+      name: '@deepseek-ai/dsh-host-directory-picker-browse'
+      disabled: !!js process.platform !== 'win32'
+
+    - id: directory-picker-browse-client
+      name: '@deepseek-ai/dsh-client-ui-directory-picker-browse'
+      disabled: !!js process.platform !== 'win32'
