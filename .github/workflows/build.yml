@@ -44,6 +44,9 @@ jobs:
           # APPLE_TEAM_ID for macOS notarization) and remove this flag.
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
 
+      - name: Smoke test (packaged host boots)
+        run: node smoke.js
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
