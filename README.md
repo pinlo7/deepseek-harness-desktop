@@ -41,6 +41,12 @@ npm run dist:mac     # dmg + zip
 
 产物输出到 `dist/`。三平台 CI 见 `.github/workflows/build.yml`（打 tag `v*` 或手动触发）。
 
+## 发布与更新
+
+- 打 `v*` tag 触发 CI 三平台构建并发布到 GitHub Releases（生成 `latest*.yml`）。
+- 打包版启动时会自动检查更新（electron-updater），下载完成后通知重启。
+- 签名/公证配置与完整发布流程见 [`RELEASE.md`](RELEASE.md)。
+
 ## 说明
 
 - 宿主只绑定 `127.0.0.1` + 随机端口，外部网络不可达。
