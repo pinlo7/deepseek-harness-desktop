@@ -23,15 +23,15 @@ npm run dist:mac     # dmg + zip（需 macOS）
 
 ## 代码签名 / 公证（正式分发必需）
 
-在仓库 Settings → Secrets 配置：
+在仓库 Settings → Secrets 配置（`build.yml` 已把这些 secrets 传入 electron-builder，配好即自动签名+公证）：
 
 | 平台 | Secret | 说明 |
 |---|---|---|
-| Windows | `CSC_LINK` + `CSC_KEY_PASSWORD` | 代码签名证书（PFX base64）+ 密码 |
-| macOS | `CSC_LINK` + `CSC_KEY_PASSWORD` | Developer ID Application 证书 |
-| macOS | `APPLE_ID` + `APPLE_APP_SPECIFIC_PASSWORD` + `APPLE_TEAM_ID` | notarize 公证 |
+| Windows / macOS | `CSC_LINK` + `CSC_KEY_PASSWORD` | 代码签名证书（PFX/p12 base64）+ 密码 |
+| macOS 公证 | `APPLE_ID` + `APPLE_APP_SPECIFIC_PASSWORD` + `APPLE_TEAM_ID` | Apple ID 公证（方式二） |
+| macOS 公证（推荐） | `APPLE_API_KEY` + `APPLE_API_KEY_ID` + `APPLE_API_ISSUER` | App Store Connect API Key（更安全） |
 
-配置后从 `build.yml` 移除 `CSC_IDENTITY_AUTO_DISCOVERY: 'false'` 即可启用签名。
+不配这些 secrets 时 CI 产出 unsigned 构建（`CSC_IDENTITY_AUTO_DISCOVERY: 'false'` 已防止 CI 上误发现本机证书）。配好后重新打 tag 即可产出签名版。
 
 ## 依赖 GA
 
