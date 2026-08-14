@@ -1,14 +1,14 @@
 # 会话记忆：DeepSeek Harness 桌面版 上线准备进度
 
 > 保存时间：2026-08-14。此文件随仓库走，跨会话/跨平台可访问。事实以本会话工具结果为准。
-> 更新：2026-08-14（Windows 实测报 directory picker 错误 → 已定位并修复，见「六」）。
+> 更新：2026-08-14（Windows 实测报 directory picker 错误 → 已定位并修复，见「六」；已推送 **v0.1.5** 触发三平台 CI，构建结果见「七」）。
 
 ## 一、项目全景
 
 - **目标**：给 deepseek-harness 做跨平台桌面版，并准备正式上线。
 - **项目目录**：`/home/liu/deepseek-harness/desktop/`
 - **GitHub 仓库**：https://github.com/pinlo7/deepseek-harness-desktop
-- **已发布版本**：`v0.1.4`（正式 release，**unsigned** 测试版）
+- **已发布版本**：`v0.1.5`（2026-08-14 推送，含 Windows browse-picker 修复；构建中，unsigned）
 - **技术栈**：Electron `43.4.0`（内置 Node `24.18.1`）+ `@deepseek-ai/dsh@0.1.0-rc.6`
 
 ## 二、架构（一句话）
@@ -59,7 +59,13 @@
 1. **代码签名/公证**（等用户）：需 Apple Developer + Windows 代码签名证书。CI 已配好 secrets 传递（`CSC_LINK`/`CSC_KEY_PASSWORD`/`APPLE_ID`/`APPLE_APP_SPECIFIC_PASSWORD`/`APPLE_TEAM_ID`，或 `APPLE_API_KEY` 三件套）。填好 secrets 打新 tag 即自动签名。
 2. **dsh 钉 GA**（等上游）：`@deepseek-ai/dsh` 仍是 `0.1.0-rc.6`，无 GA。
 3. **真实对话实测**（进行中）：Linux 已定位到"装了 0.1.0 旧版"，需重装 0.1.4；Windows 待测。
-4. **Windows picker 修复待发布**：仓库已提交（`74f4923`，`profiles/desktop/cordis.patch.yml` 固定 browse），用户本机 profile 已即时 patch 并重启验证通过（dump-config 确认 auto 禁用/browse 启用、UI 200）。**待用户实测**：打开工作区（应为网页选择器）+ 跑一轮真实对话（验证 fs koffi 是否也崩）。确认 OK 后 bump 版本发 0.1.5。
+4. **Windows picker 修复待发布**：仓库已提交（`74f4923`，`profiles/desktop/cordis.patch.yml` 固定 browse），用户本机 profile 已即时 patch 并重启验证通过（dump-config 确认 auto 禁用/browse 启用、UI 200）。**已推送 v0.1.5 触发 CI**（run 31767809862，三平台构建 → GitHub Releases）。**待用户实测**：打开工作区（应为网页选择器）+ 跑一轮真实对话（验证 fs koffi 是否也崩）。CI 绿后把安装包链接给用户。
+
+## 七、v0.1.5 发布记录
+
+- 2026-08-14：`npm version patch` → `2f3bd54` + tag `v0.1.5` → `git push --follow-tags`（需 `-c http.sslBackend=openssl`，本机 schannel 有问题）
+- CI：build-desktop run `31767809862`（event push, queued）→ 三平台构建 → 发布到 GitHub Releases
+- 若签名 secrets 未配，产出 unsigned（同 v0.1.4），SmartScreen 会警告
 
 ## 七、下一步（按用户进展触发）
 
