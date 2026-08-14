@@ -21,36 +21,41 @@ function findUnpackedDirs() {
 }
 
 function findElectronBinary(dir) {
-  const execName = 'dsh-desktop'; // package.json "name" — electron-builder's Linux/macOS executable
+  const execName = 'dsh-desktop'; // package.json "name"
   try {
-    if (process.platform === 'win32') {
-      const exes = fs.readdirSync(dir).filter((f) => f.endsWith('.exe') && !/Setup|Update|crashpad/i.test(f));
-      const main = exes.find((f) => /dsh-desktop|DeepSeek/i.test(f)) || exes[0];
-      return main ? path.join(dir, main) : null;
-    }
-    if (process.platform === 'darwin') {
-      for (const f of fs.readdirSync(dir)) {
-        if (!f.endsWith('.app')) continue;
-        const macos = path.join(dir, f, 'Contents', 'MacOS');
-        if (!fs.existsSync(macos)) continue;
-        const exe = fs.readdirSync(macos).find((x) => !x.endsWith('.dSYM'));
-        if (exe) return path.join(macos, exe);
-      }
-      return null;
-    }
-    // linux: the main binary is named after the package, not the sandbox helpers
+    // macOS: <dir>/<Name>.app/Contents/MacOS/<Name>
     for (const f of fs.readdirSync(dir)) {
-      if (f === execName) return path.join(dir, f);
+      if (!f.endsWith('.app')) continue;
+      const macos = path.join(dir, f, 'Contents', 'MacOS');
+      if (!fs.existsSync(macos)) continue;
+      const exe = fs.readdirSync(macos).find((x) => !x.endsWith('.dSYM'));
+      if (exe) return path.join(macos, exe);
     }
+    // Windows: <dir>/<Name>.exe (not the installer/updater helpers)
+    const exes = fs.readdirSync(dir).filter((f) => f.endsWith('.exe') && !/Setup|Update|crashpad/i.test(f));
+    if (exes.length > 0) {
+      const main = exes.find((f) => /dsh-desktop|DeepSeek/i.test(f)) || exes[0];
+      return path.join(dir, main);
+    }
+    // Linux: <dir>/dsh-desktop
+    if (fs.existsSync(path.join(dir, execName))) return path.join(dir, execName);
   } catch (_) {}
   return null;
 }
 
 function findDshBin(dir) {
   const candidates = [
+    // Linux/Windows: <dir>/resources/app.asar.unpacked/node_modules/...
     path.join(dir, 'resources', 'app.asar.unpacked', 'node_modules', '@deepseek-ai', 'dsh', 'lib', 'bin.js'),
-    path.join(dir, 'Contents', 'Resources', 'app.asar.unpacked', 'node_modules', '@deepseek-ai', 'dsh', 'lib', 'bin.js'),
   ];
+  // macOS: <dir>/<Name>.app/Contents/Resources/app.asar.unpacked/node_modules/...
+  try {
+    for (const f of fs.readdirSync(dir)) {
+      if (f.endsWith('.app')) {
+        candidates.push(path.join(dir, f, 'Contents', 'Resources', 'app.asar.unpacked', 'node_modules', '@deepseek-ai', 'dsh', 'lib', 'bin.js'));
+      }
+    }
+  } catch (_) {}
   return candidates.find((c) => fs.existsSync(c)) || null;
 }
 
