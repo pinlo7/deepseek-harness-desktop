@@ -2,6 +2,10 @@
 
 跨平台桌面版 DeepSeek Harness：一个薄 Electron 壳，内嵌 `dsh` 宿主进程，复用官方 Web 前端，零改动。
 
+**官方  deepseek-harness**：
+
+👉 **https://github.com/deepseek-ai/deepseek-harness**
+
 ## 下载安装
 
 所有平台安装包发布在 **GitHub Releases**：
