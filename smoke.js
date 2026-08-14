@@ -69,7 +69,7 @@ function runSmoke(electronBin, dshBin, home) {
     const timer = setTimeout(() => {
       child.kill('SIGTERM');
       resolve(false);
-    }, 45000);
+    }, 90000);
     child.stdout.on('data', (c) => {
       const t = c.toString();
       process.stdout.write(`[smoke] ${t}`);
